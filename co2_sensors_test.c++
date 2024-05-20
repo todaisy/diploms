@@ -9,8 +9,8 @@ Vin:      +5v
 S8:
 G+:       +5v
 G0:       Gnd
-TX: 3<->5 1
-RX: 3<->5 3
+TX: 3<->5 12
+RX: 3<->5 14
 
 DS3231
 SCL:      A5
@@ -20,7 +20,6 @@ VDD:      5v
 */
 
 // для датчиков
-//#include <SoftwareSerial.h>
 #include "Wire.h"
 #include <Arduino.h>
 #include "MHZ19.h"
@@ -34,28 +33,29 @@ VDD:      5v
 // Укажите свои данные сети
 const char* ssid = "Greenvent";
 const char* password = "11223344"; // 9850590871
- 
+
 // Используйте @myidbot, чтобы получить ID пользователя или группы
 // Помните, что бот сможет вам писать только после нажатия вами кнопки /start
 #define CHAT_ID "333152420"
 // Запустите бот Telegram
 #define BOTtoken "6888409297:AAG6HpFuiMcUaG4i0ePldaCZSmkItD73DGk"  
- 
+
 WiFiClientSecure client;
 UniversalTelegramBot bot(BOTtoken, client);
- 
+
 // Каждую секунду проверяет новые сообщения
 int botRequestDelay = 1000;
 unsigned long lastTimeBotRan; 
 
 // мб 41 и 40 пин - 0 тх рх
 // при загрузке кода обязательно снимать пины 1, 3
-#define S8_TX 1 // GPIO pin for S8 sensor rX 
-#define S8_RX 3 // GPIO pin for S8 sensor tX
+#define S8_TX 14 // GPIO pin for S8 sensor rX - 14 
+#define S8_RX 12 // GPIO pin for S8 sensor tX - 12
 HardwareSerial mySerial_s8(1); // тут какой порт???
+String message = "4";
 
-#define Z19_TX 17 // GPIO pin for S8 sensor rX
-#define Z19_RX 16 // GPIO pin for S8 sensor tX
+#define Z19_TX 17 // GPIO pin for S8 sensor rX - 17
+#define Z19_RX 16 // GPIO pin for S8 sensor tX - 16
 #define BAUDRATE 9600 
 // HardwareSerial mySerial_s8(2);
 MHZ19 myMHZ19;    // Constructor for library
@@ -111,15 +111,50 @@ void handleNewMessages(int numNewMessages)
       String readings = co2_measure(); 
       bot.sendMessage(chat_id, readings, ""); 
     } 
+    // дописываю условие на миллисы
+    //else if (millis() - getDataTimer >= 20000){
+    //  getDataTimer = millis();
+    //  String readings = co2_measure(); 
+    //  bot.sendMessage(chat_id, readings, "");
+    //}
   } 
 } 
 
+void s8Request(byte cmd[]) {
+  mySerial_s8.begin(9600);
+  while(!mySerial_s8.available()) {
+    mySerial_s8.write(cmd, c_len); 
+    delay(50); 
+  }
+  int timeout=0;
+  while(mySerial_s8.available() < r_len ) {
+    timeout++; 
+    if(timeout > 10) {
+      while(mySerial_s8.available()) {
+        mySerial_s8.read();
+        break;
+      }
+    } 
+    delay(50); 
+  } 
+  for (int i=0; i < r_len; i++) { 
+    response_s8[i] = mySerial_s8.read(); 
+  }
+  
+  mySerial_s8.end();
+} 
 
+unsigned long s8Replay(byte rc_data[]) { 
+  int high = rc_data[3];
+  int low = rc_data[4];
+  unsigned long val = high*256 + low;
+  return val; 
+}
 
 // Запрос показаний датчика S8 и запись их в переменную типа String
 String co2_measure() {
-  //s8Request(cmd_s8);
-  s8_co2 = getValue_s8(response_s8);
+  s8Request(cmd_s8);
+  s8_co2 = s8Replay(response_s8);
   
   if (!s8_co2_mean) s8_co2_mean = s8_co2;
   s8_co2_mean = s8_co2_mean - smoothing_factor*(s8_co2_mean - s8_co2);
@@ -127,31 +162,19 @@ String co2_measure() {
   if (!s8_co2_mean2) s8_co2_mean2 = s8_co2;
   s8_co2_mean2 = s8_co2_mean2 - smoothing_factor2*(s8_co2_mean2 - s8_co2);
 
-  // MH-Z1911B
   int CO2;
-  /* note: getCO2() default is command "CO2 Unlimited". This returns the correct CO2 reading even
-  if below background CO2 levels or above range (useful to validate sensor). You can use the
-  usual documented command with getCO2(false) */
-
   CO2 = myMHZ19.getCO2(); // Request CO2 (as ppm)
   Serial.print("CO2 (ppm): ");
   Serial.println(CO2);
-
   int8_t Temp;
   Temp = myMHZ19.getTemperature(); // Request Temperature (as Celsius)
-  Serial.print("Temperature (C): ");
-  Serial.println(Temp);
+  //Serial.print("Temperature (C): ");
+  //Serial.println(Temp);
 
   String message = "S8 CO2 value: " + String(s8_co2) + " M1Value:" + String(s8_co2_mean) + " M2Value:" + String(s8_co2_mean2) 
-                  + "; MH-Z1911B CO2 value (ppm): " + String(CO2) + " Temperature (C): " + String(Temp);
+          + "; MH-Z1911B CO2 value (ppm): " + String(CO2) + " Temperature (C): " + String(Temp);;
   return message;
 }
-
-// это таймер для бота, потом исправить
-//if (millis() - getDataTimer >= 2000)
-//{
-//  getDataTimer = millis();
-//}
 
 
 void setup() 
@@ -177,6 +200,7 @@ void setup()
  
   // Выводим IP ESP32
   Serial.println(WiFi.localIP()); 
+  
 } 
 
 
@@ -194,12 +218,8 @@ unsigned long getValue_s8(byte packet[]) {
       int high = packet[2];
       int low = packet[3];
       val = high * 256 + low;
-    } else {
-      Serial.println("Invalid response from S8 sensor");
-    }
-    } else {
-      Serial.println("No response from S8 sensor");
-    }
+    } 
+    } 
   return val;
 }
  
@@ -211,7 +231,7 @@ void loop()
  
     while(numNewMessages) 
     {
-      Serial.println("got response");
+      //Serial.println("got response");
       handleNewMessages(numNewMessages);
       numNewMessages = bot.getUpdates(bot.last_message_received + 1);
     }
