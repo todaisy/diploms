@@ -171,8 +171,19 @@ String co2_measure() {
   //Serial.print("Temperature (C): ");
   //Serial.println(Temp);
 
-  String message = "S8 CO2 value: " + String(s8_co2) + " M1Value:" + String(s8_co2_mean) + " M2Value:" + String(s8_co2_mean2) 
-          + "; MH-Z1911B CO2 value (ppm): " + String(CO2) + " Temperature (C): " + String(Temp);;
+  String message; 
+  message += "S8 CO2 value: "; 
+  message += s8_co2;
+  message += " M1Value:"; 
+  message += s8_co2_mean; 
+  message += " M2Value:"; 
+  message += s8_co2_mean2;
+  message += "/n"
+  message += "MH-Z1911B CO2 value (ppm): ";
+  message += CO2;
+  message += " Temperature (C): ";
+  message += Temp;
+ 
   return message;
 }
 
