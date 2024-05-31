@@ -2,15 +2,15 @@
 // сайт с кнопками - проверен на вс2811 - работает
 
 #include <Adafruit_NeoPixel.h>
-#define NUMPIXELS 9 // количество светодиодов в ленте
-#define PIN 2 // порт, к которому подключена лента
+#define NUMPIXELS 32 // количество светодиодов в ленте
+#define PIN 4 // порт, к которому подключена лента
 // volatile int counter = 0;
 Adafruit_NeoPixel pixels(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ400);
 
 #include <WiFi.h>
 #include <WebServer.h>
 /* Установите здесь свои SSID и пароль */
-const char* ssid = "ESP32";  
+const char* ssid = "ESP32_RGB";  
 const char* password = "01234567";  
 /* Настройки IP адреса */
 IPAddress local_ip(192,168,2,1);
@@ -88,7 +88,7 @@ void loop() {
   {
     for(int i=0; i<pixels.numPixels(); i++) 
     {
-      pixels.setPixelColor(i, pixels.Color(25,50,25));
+      pixels.setPixelColor(i, pixels.Color(85,85,85));
       delay(1);
     }
     pixels.show();
@@ -197,19 +197,19 @@ String SendHTML(uint8_t redstat, uint8_t greenstat, uint8_t bluestat, uint8_t ra
   ptr +="<h3>Переключение режимов</h3>\n";
 
   if(redstat)
-  {ptr +="<p>Красный LED1: ВКЛ.</p><a class=\"button button-off\" href=\"/led1off\">ВЫКЛ.</a>\n";}
+  {ptr +="<p>Красный: ВКЛ.</p><a class=\"button button-off\" href=\"/led1off\">ВЫКЛ.</a>\n";}
   else
-  {ptr +="<p>Красный LED1: ВЫКЛ.</p><a class=\"button button-on\" href=\"/led1on\">ВКЛ.</a>\n";}
+  {ptr +="<p>Красный: ВЫКЛ.</p><a class=\"button button-on\" href=\"/led1on\">ВКЛ.</a>\n";}
 
   if(greenstat)
-  {ptr +="<p>Зеленый LED2: ВКЛ.</p><a class=\"button button-off\" href=\"/led2off\">ВЫКЛ.</a>\n";}
+  {ptr +="<p>Синий: ВКЛ.</p><a class=\"button button-off\" href=\"/led2off\">ВЫКЛ.</a>\n";}
   else
-  {ptr +="<p>Зеленый LED2: ВЫКЛ.</p><a class=\"button button-on\" href=\"/led2on\">ВКЛ.</a>\n";}
+  {ptr +="<p>Синий: ВЫКЛ.</p><a class=\"button button-on\" href=\"/led2on\">ВКЛ.</a>\n";}
 
   if(bluestat)
-  {ptr +="<p>Синий LED3: ВКЛ.</p><a class=\"button button-off\" href=\"/led3off\">ВЫКЛ.</a>\n";}
+  {ptr +="<p>Зеленый: ВКЛ.</p><a class=\"button button-off\" href=\"/led3off\">ВЫКЛ.</a>\n";}
   else
-  {ptr +="<p>Синий LED3: ВЫКЛ.</p><a class=\"button button-on\" href=\"/led3on\">ВКЛ.</a>\n";}
+  {ptr +="<p>Зеленый: ВЫКЛ.</p><a class=\"button button-on\" href=\"/led3on\">ВКЛ.</a>\n";}
 
   if(rainbowstat)
   {ptr +="<p>Разноцветный LED4: ВКЛ.</p><a class=\"button button-off\" href=\"/led4off\">ВЫКЛ.</a>\n";}
