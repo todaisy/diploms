@@ -2,7 +2,7 @@
 // сайт с кнопками - проверен на вс2811 - работает
 
 #include <Adafruit_NeoPixel.h>
-#define NUMPIXELS 32 // количество светодиодов в ленте
+#define NUMPIXELS 100 // количество светодиодов в ленте
 #define PIN 4 // порт, к которому подключена лента
 // volatile int counter = 0;
 Adafruit_NeoPixel pixels(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ400);
@@ -10,7 +10,7 @@ Adafruit_NeoPixel pixels(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ400);
 #include <WiFi.h>
 #include <WebServer.h>
 /* Установите здесь свои SSID и пароль */
-const char* ssid = "ESP32_RGB";  
+const char* ssid = "ESP32_Mesh";  
 const char* password = "01234567";  
 /* Настройки IP адреса */
 IPAddress local_ip(192,168,2,1);
@@ -88,7 +88,7 @@ void loop() {
   {
     for(int i=0; i<pixels.numPixels(); i++) 
     {
-      pixels.setPixelColor(i, pixels.Color(85,85,85));
+      pixels.setPixelColor(i, pixels.Color(120,50,25));
       delay(1);
     }
     pixels.show();
@@ -111,7 +111,7 @@ void updateLEDs() {
     }
   } else if (rainbow) {
     for (int i = 0; i < pixels.numPixels(); i++) {
-      pixels.setPixelColor(i, pixels.Color(25, 50, 25));
+      pixels.setPixelColor(i, pixels.Color(255, 0, 255));
     }
   }
   pixels.show();
@@ -212,9 +212,9 @@ String SendHTML(uint8_t redstat, uint8_t greenstat, uint8_t bluestat, uint8_t ra
   {ptr +="<p>Зеленый: ВЫКЛ.</p><a class=\"button button-on\" href=\"/led3on\">ВКЛ.</a>\n";}
 
   if(rainbowstat)
-  {ptr +="<p>Разноцветный LED4: ВКЛ.</p><a class=\"button button-off\" href=\"/led4off\">ВЫКЛ.</a>\n";}
+  {ptr +="<p>Фиолетовый: ВКЛ.</p><a class=\"button button-off\" href=\"/led4off\">ВЫКЛ.</a>\n";}
   else
-  {ptr +="<p>Разноцветный LED4: ВЫКЛ.</p><a class=\"button button-on\" href=\"/led4on\">ВКЛ.</a>\n";}
+  {ptr +="<p>Фиолетовый: ВЫКЛ.</p><a class=\"button button-on\" href=\"/led4on\">ВКЛ.</a>\n";}
 
   ptr +="</body>\n";
   ptr +="</html>\n";
